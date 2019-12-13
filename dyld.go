@@ -236,7 +236,7 @@ func IsLoadable(path string) (bool, error) {
 	return ok, err
 }
 
-// Lookup looks up symbol with name.
+// Lookup searches symbol with name.
 //
 // Returns the address of the code or data location specified by the symbol name.
 //
