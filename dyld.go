@@ -12,6 +12,7 @@ type Symbol struct {
 }
 
 func (s *Symbol) Invoke(a1, a2, a3 uintptr) (r1, r2, err uintptr) {
+	// Hack for the example.
 	return syscall_syscall(s.symbol, a1, a2, a3)
 }
 
