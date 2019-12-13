@@ -67,8 +67,6 @@ const (
 )
 
 var (
-	MainOnly = _RTLD_MAIN_ONLY // Search main executable only.
-
 	_RTLD_NEXT      = &Dylib{"", ^Handle(0)}
 	_RTLD_DEFAULT   = &Dylib{"", ^Handle(1)}
 	_RTLD_SELF      = &Dylib{"", ^Handle(2)}
