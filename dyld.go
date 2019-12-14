@@ -5,6 +5,10 @@ import (
 	"runtime"
 )
 
+var (
+	ErrNotFound = errors.New("not found")
+)
+
 const (
 	// Each external function reference is bound the first time
 	// the function is called.
@@ -74,14 +78,14 @@ var (
 	_RTLD_MAIN_ONLY = &Dylib{"", ^Handle(4)}
 )
 
-// LookupGlobal searches symbol by name in all Mach-O images in the process
+// Lookup searches symbol by name in all Mach-O images in the process
 // (except those loaded with ScopeLocal) in the order they were loaded. This
 // can be a costly search and should be avoided.
 //
 // See dlsym(3).
 // See RTLD_DEFAULT.
 //
-func LookupGlobal(name string) (*Symbol, error) {
+func Lookup(name string) (*Symbol, error) {
 	return _RTLD_DEFAULT.Lookup(name)
 }
 
@@ -123,11 +127,8 @@ type Dylib struct {
 type Symbol struct {
 	Dylib *Dylib
 	Name  string
-	addr  uintptr
+	Addr  uintptr
 }
-
-// Addr returns the address of the symbol represented by s.
-func (s *Symbol) Addr() uintptr { return s.addr }
 
 func (s *Symbol) Invoke(args ...uintptr) (r1, r2, err uintptr) {
 	// Hack for the example.
@@ -135,7 +136,7 @@ func (s *Symbol) Invoke(args ...uintptr) (r1, r2, err uintptr) {
 		panic("oops")
 	}
 	a1, a2, a3 := args[0], args[1], args[2]
-	return syscall_syscall(s.addr, a1, a2, a3)
+	return syscall_syscall(s.Addr, a1, a2, a3)
 }
 
 // MustOpen is like Open but panics if operation failes.
@@ -270,7 +271,7 @@ func (d *Dylib) Lookup(name string) (*Symbol, error) {
 //   1) The main executable links against it,
 //   2) An API that does not supoort unloading (e.g. NSAddImage()) was used
 //      to load it or some other dynamic library that depends on it,
-//   3) the dynamic library is in dyld’s shared cache.
+//   3) The dynamic library is in dyld’s shared cache.
 //
 // See dlclose(3).
 //
@@ -288,6 +289,41 @@ func (d *Dylib) Close() (err error) {
 	return err
 }
 
+type AddrInfo struct {
+	Fname string  // Pathname of shared object
+	Fbase uintptr // Base address of shared object
+	Sname string  // Name of nearest symbol
+	Saddr uintptr // Address of nearest symbol
+}
+
+// Addr finds the image containing a given address.
+//
+// Returns information about the image containing the address addr.
+// If the image containing addr is found, but no nearest symbol was
+// found, info.Sname and info.Saddr fields are set to zero value.
+//
+// See dladdr(3).
+//
+func Addr(addr uintptr) (info *AddrInfo, err error) {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+
+	var dli _dl_info
+	ret := dladdr(addr, &dli)
+	if ret != 0 {
+		fname := gostring(dli.fname)
+		sname := gostring(dli.sname)
+		info := AddrInfo{
+			Fname: fname,
+			Fbase: dli.fbase,
+			Sname: sname,
+			Saddr: dli.saddr,
+		}
+		return &info, nil
+	}
+	return nil, ErrNotFound
+}
+
 // LastError returns an error describing the last dyld error that occurred
 // on this thread. At each call to LastError, the error indication is reset.
 // Thus in the case of two calls to LastError, where the second call follows
@@ -301,6 +337,8 @@ func LastError() error {
 	ret := dlerror()
 	if ret != 0 {
 		s := gostring(ret)
+		// TODO export error vars by known string suffixes.
+		// E.g. strings.HasSuffix(s, ": symbol not found").
 		err := errors.New(s)
 		return err
 	}
