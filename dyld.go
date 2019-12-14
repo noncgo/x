@@ -292,6 +292,8 @@ func (d *Dylib) Close() (err error) {
 // Thus in the case of two calls to LastError, where the second call follows
 // the first immediately, the second call will always return nil.
 //
+// DO NOT USE THIS FUNCTION UNLESS YOU KNOW WHAT YOU ARE DOING
+//
 // See dlerror(3).
 //
 func LastError() error {
