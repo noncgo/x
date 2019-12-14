@@ -1,0 +1,51 @@
+name: main
+on: [push, pull_request]
+jobs:
+  build:
+    name: run
+    strategy:
+      matrix:
+        go:
+          - 1.12.x
+          - 1.13.x
+          # aka latest; see actions/setup-go#32
+          - .x
+          - tip
+    runs-on: macos-latest
+    env:
+      CGO_ENABLED: '0'
+    steps:
+      - name: Install Go
+        if: matrix.go != 'tip'
+        uses: actions/setup-go@master
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Install Go
+        if: matrix.go == 'tip'
+        run: |
+          export GO_EXTLINK_ENABLED=0
+          export CGO_ENABLED=0
+          export GOROOT_BOOTSTRAP=`go env GOROOT`
+          export GOROOT_FINAL=/go
+          export GOROOT=$HOME/gotip
+          mkdir $HOME/gotip
+          cd $HOME/gotip
+
+          curl -s 'https://go.googlesource.com/go/+/refs/heads/master?format=TEXT' | base64 -d | awk '{if($1=="parent"){print$2;exit}}' >HEAD
+          awk '{printf("gotip-%s",substr($0,0,7));exit}' <HEAD >VERSION
+
+          curl -s -o go.tar.gz https://go.googlesource.com/go/+archive/`cat HEAD`.tar.gz
+          tar xfz go.tar.gz
+
+          cd src
+          bash make.bash
+
+          echo "::set-env name=GOROOT::$GOROOT"
+          echo "::add-path::$GOROOT/bin"
+
+      - name: Checkout code
+        uses: actions/checkout@master
+
+      - name: Test
+        run: go test -v
