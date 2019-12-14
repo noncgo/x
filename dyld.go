@@ -13,11 +13,12 @@ const (
 	//
 	BindLazy = _RTLD_LAZY
 
-	// All external function references are bound immediately during
-	// the call to Open.
+	// All external function references are bound immediately
+	// during the call to Open.
 	//
-	// Lazy is normally preferred, for reasons of efficiency. However,
-	// Now is useful to ensure that any undefined symbols are discovered.
+	// Lazy is normally preferred, for reasons of efficiency.
+	// However, BindNow is useful to ensure that any undefined
+	// symbols are discovered.
 	//
 	BindNow = _RTLD_NOW
 
@@ -30,21 +31,21 @@ const (
 	//
 	ScopeGlobal = _RTLD_GLOBAL
 
-	// Exported symbols are generally hidden and only availble to Lookup
-	// when directly using the Dylib returned by Open.
+	// Exported symbols are generally hidden and only availble
+	// to Lookup when directly using the Dylib returned by Open.
 	//
 	ScopeLocal = _RTLD_LOCAL
 
-	// The image is not loaded. However, a valid
-	// Dylib is returned if the image already exists in the
-	// process. This provides a way to query if an image is
-	// already loaded. You eventually need a corresponding
-	// call to Close.
+	// The image is not loaded. However, a valid Dylib is returned if
+	// the image already exists in the process. This provides a way to
+	// query if an image is already loaded.
+	//
+	// You eventually need a corresponding call to Close.
 	//
 	NoLoad = _RTLD_NOLOAD
 
-	// The image will never be removed from the address space, even after
-	// all clients have released it via Close.
+	// The image will never be removed from the address space,
+	// even after all clients have released it via Close.
 	//
 	NoDelete = _RTLD_NODELETE
 
@@ -159,10 +160,10 @@ func MustOpen(path string, mode int) *Dylib {
 // When set, the environment variables must contain a colon-separated list of
 // directory paths, which can be absolute or relative to the current working
 // directory. The environment variables are LD_LIBRARY_PATH, DYLD_LIBRARY_PATH,
-// and DYLD_FALLBACK_LIBRARY_PATH. The first two variables have no default
-// value. The default value of DYLD_FALLBACK_LIBRARY_PATH is $HOME/lib;/usr/local/lib;/usr/lib.
-// Open searches the directories specified in the environment variables in the
-// order they are listed.
+// and DYLD_FALLBACK_LIBRARY_PATH. The default value of the latter variable is
+// $HOME/lib;/usr/local/lib;/usr/lib. The first two variables have no default
+// value. Open searches the directories specified in the environment variables
+// in the order they are listed.
 //
 // When path doesn’t contain a slash character (i.e. it is just a leaf name),
 // Open searches the following the locations until it finds a compatible Mach-O
