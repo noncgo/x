@@ -198,7 +198,7 @@ func Open(path string, mode int) (*Dylib, error) {
 
 	handle := dlopen(p, mode)
 	if handle <= 0 {
-		return nil, LastError()
+		return nil, lastError()
 	}
 	h := Handle(handle)
 	d := &Dylib{path, h}
@@ -231,7 +231,7 @@ func IsLoadable(path string) (bool, error) {
 
 	ok := dlopen_preflight(p)
 	if !ok {
-		err = LastError()
+		err = lastError()
 	}
 	return ok, err
 }
@@ -253,7 +253,7 @@ func (d *Dylib) Lookup(name string) (*Symbol, error) {
 
 	ret := dlsym(uintptr(d.Handle), p)
 	// We must check dlerror because symbol could be NULL.
-	if err := LastError(); err != nil {
+	if err := lastError(); err != nil {
 		return nil, err
 	}
 	return &Symbol{d, name, ret}, nil
@@ -281,7 +281,7 @@ func (d *Dylib) Close() (err error) {
 
 	ret := dlclose(uintptr(d.Handle))
 	if ret != 0 {
-		err = LastError()
+		err = lastError()
 	}
 
 	// No need for a finalizer anymore.
@@ -324,16 +324,14 @@ func Addr(addr uintptr) (info *AddrInfo, err error) {
 	return nil, ErrNotFound
 }
 
-// LastError returns an error describing the last dyld error that occurred
-// on this thread. At each call to LastError, the error indication is reset.
-// Thus in the case of two calls to LastError, where the second call follows
+// lastError returns an error describing the last dyld error that occurred
+// on this thread. At each call to lastError, the error indication is reset.
+// Thus in the case of two calls to lastError, where the second call follows
 // the first immediately, the second call will always return nil.
-//
-// DO NOT USE THIS FUNCTION UNLESS YOU KNOW WHAT YOU ARE DOING
 //
 // See dlerror(3).
 //
-func LastError() error {
+func lastError() error {
 	ret := dlerror()
 	if ret != 0 {
 		s := gostring(ret)
