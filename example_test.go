@@ -6,6 +6,14 @@ import (
 	"github.com/tie/dyld"
 )
 
+func ExampleIsLoadable_dyld() {
+	// dyld is the Mach-O dynamic loader executable.
+	// We can’t load it because it has wrong DYLINKER file type.
+	ok, err := dyld.IsLoadable("dyld")
+	fmt.Println(!ok && err != nil)
+	// Output: true
+}
+
 func ExampleOpen_scopeLocal() {
 	lib, err := dyld.Open("libsqlite3.dylib", dyld.ScopeLocal)
 	if err != nil {
@@ -30,7 +38,7 @@ func ExampleOpen_scopeLocal() {
 	// Found sqlite3_open
 }
 
-func ExampleLookup() {
+func ExampleLookup_scopeGlobal() {
 	sym, err := dyld.Lookup("dlopen")
 	if err != nil {
 		fmt.Printf("lookup: %v", err)
