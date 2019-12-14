@@ -8,8 +8,8 @@ jobs:
         go:
           - 1.12.x
           - 1.13.x
-          # aka latest; see actions/setup-go#32
-          - .x
+          # TODO actions/setup-go#32
+          #- latest
           - tip
     runs-on: macos-latest
     env:
@@ -43,6 +43,11 @@ jobs:
 
           echo "::set-env name=GOROOT::$GOROOT"
           echo "::add-path::$GOROOT/bin"
+
+      - name: Show Go
+        run: |
+          go version
+          go env
 
       - name: Checkout code
         uses: actions/checkout@master
