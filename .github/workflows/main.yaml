@@ -16,6 +16,9 @@ jobs:
           #- latest
           - tip
     steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+
       - name: Install Go
         if: matrix.go != 'tip'
         uses: actions/setup-go@master
@@ -64,9 +67,6 @@ jobs:
 
       - name: Show Go environment
         run: go env
-
-      - name: Checkout code
-        uses: actions/checkout@master
 
       - name: Run tests
         run: go test -v
