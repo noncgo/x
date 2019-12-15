@@ -23,30 +23,29 @@ jobs:
           go-version: ${{ matrix.go }}
 
       - name: Fetch Go tip commit
-        if: matrix.go == 'tip' && steps.cache.outputs.cache-hit != 'true'
+        if: matrix.go == 'tip'
         run: |
-          mkdir ~/gotip
-          cd ~/gotip
           curl -s 'https://go.googlesource.com/go/+/refs/heads/master?format=JSON' >JSON
 
       - name: Restore Go tip cache
-        uses: actions/cache@v1
-        if: matrix.go == 'tip'
         id: cache-gotip
+        if: matrix.go == 'tip'
+        uses: actions/cache@v1
         with:
           path: ~/gotip
-          key: ${{ runner.os }}-gotip-${{ hashFiles('~/gotip/JSON') }}
+          key: ${{ runner.os }}-gotip-${{ hashFiles('JSON') }}
 
       - name: Install Go
         if: matrix.go == 'tip' && steps.cache-gotip.outputs.cache-hit != 'true'
         run: |
-          cd ~/gotip
           export GOROOT_BOOTSTRAP=`go env GOROOT`
           export GOROOT_FINAL=/go
           export GOROOT=~/gotip
 
-          awk '/"commit"/{print substr($2,2,40);exit}' <JSON >HEAD
-          awk '{printf("gotip-%s",substr($0,0,7))}' <HEAD >VERSION
+          mkdir ~/gotip
+          awk '/"commit"/{print substr($2,2,40);exit}' <JSON >~/gotip/HEAD
+          awk '{printf("gotip-%s",substr($0,0,7))}' <HEAD >~/gotip/HEAD
+          cd ~/gotip
 
           curl -s -o go.tar.gz https://go.googlesource.com/go/+archive/`cat HEAD`.tar.gz
           tar xfz go.tar.gz
