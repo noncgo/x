@@ -24,7 +24,6 @@ jobs:
 
       - name: Fetch Go tip commit
         if: matrix.go == 'tip' && steps.cache.outputs.cache-hit != 'true'
-        working-directory: ~/gotip
         run: |
           mkdir ~/gotip
           cd ~/gotip
@@ -40,8 +39,8 @@ jobs:
 
       - name: Install Go
         if: matrix.go == 'tip' && steps.cache-gotip.outputs.cache-hit != 'true'
-        working-directory: ~/gotip
         run: |
+          cd ~/gotip
           export GOROOT_BOOTSTRAP=`go env GOROOT`
           export GOROOT_FINAL=/go
           export GOROOT=~/gotip
