@@ -44,11 +44,14 @@ jobs:
 
           mkdir ~/gotip
           awk '/"commit"/{print substr($2,2,40);exit}' <JSON >~/gotip/HEAD
-          awk '{printf("gotip-%s",substr($0,0,7))}' <HEAD >~/gotip/HEAD
           cd ~/gotip
+          awk '{printf("gotip-%s",substr($0,0,7))}' <HEAD >VERSION
 
           curl -s -o go.tar.gz https://go.googlesource.com/go/+archive/`cat HEAD`.tar.gz
-          tar xfz go.tar.gz
+          rm HEAD
+
+          tar -x -z -f go.tar.gz
+          rm go.tar.gz
 
           cd src
           bash make.bash
