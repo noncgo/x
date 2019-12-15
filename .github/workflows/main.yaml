@@ -31,8 +31,8 @@ jobs:
           mkdir $HOME/gotip
           cd $HOME/gotip
 
-          curl -s 'https://go.googlesource.com/go/+/refs/heads/master?format=TEXT' | base64 -d | awk '{if($1=="parent"){print$2;exit}}' >HEAD
-          awk '{printf("gotip-%s",substr($0,0,7));exit}' <HEAD >VERSION
+          curl -s 'https://go.googlesource.com/go/+/refs/heads/master?format=JSON' | awk '/"commit"/{print substr($2,2,40);exit}' >HEAD
+          awk '{printf("gotip-%s",substr($0,0,7))}' <HEAD >VERSION
 
           curl -s -o go.tar.gz https://go.googlesource.com/go/+archive/`cat HEAD`.tar.gz
           tar xfz go.tar.gz
