@@ -35,7 +35,7 @@ jobs:
         id: cache-gotip
         with:
           path: ~/gotip
-          key: ${{ runner.os }}-gotip-${{ hashFiles('JSON') }}
+          key: ${{ runner.os }}-gotip-${{ hashFiles('~/gotip/JSON') }}
 
       - name: Install Go
         if: matrix.go == 'tip' && steps.cache-gotip.outputs.cache-hit != 'true'
