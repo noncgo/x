@@ -26,6 +26,8 @@ jobs:
         if: matrix.go == 'tip' && steps.cache.outputs.cache-hit != 'true'
         working-directory: ~/gotip
         run: |
+          mkdir ~/gotip
+          cd ~/gotip
           curl -s 'https://go.googlesource.com/go/+/refs/heads/master?format=JSON' >JSON
 
       - name: Restore Go tip cache
