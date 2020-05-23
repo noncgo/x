@@ -15,13 +15,13 @@ func ExampleIsLoadable_dyld() {
 }
 
 func ExampleOpen_scopeLocal() {
-	lib, err := dyld.Open("libsqlite3.dylib", dyld.ScopeLocal)
+	lib, err := dyld.Open("libffi.dylib", dyld.ScopeLocal)
 	if err != nil {
 		fmt.Printf("open: %v", err)
 		return
 	}
 
-	sym, err := lib.Lookup("sqlite3_open")
+	sym, err := lib.Lookup("ffi_call")
 	if err != nil {
 		fmt.Printf("lookup: %v", err)
 		return
@@ -35,7 +35,7 @@ func ExampleOpen_scopeLocal() {
 
 	fmt.Println("Found", sym.Name)
 	// Output:
-	// Found sqlite3_open
+	// Found ffi_call
 }
 
 func ExampleLookup_scopeGlobal() {
