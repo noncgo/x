@@ -8,6 +8,7 @@ jobs:
       CGO_ENABLED: '0'
       GO_EXTLINK_ENABLED: '0'
     strategy:
+      fail-fast: false
       matrix:
         go:
           - 1.12.x
@@ -15,7 +16,11 @@ jobs:
           - 1.14.x
           # TODO actions/setup-go#32
           #- latest
-          - tip
+        experimental: [false]
+        include:
+          - go: tip
+            experimental: true
+    continue-on-error: ${{ matrix.experimental }}
     steps:
       - name: Checkout code
         uses: actions/checkout@master
