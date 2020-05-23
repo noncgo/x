@@ -130,15 +130,6 @@ type Symbol struct {
 	Addr  uintptr
 }
 
-func (s *Symbol) Invoke(args ...uintptr) (r1, r2, err uintptr) {
-	// Hack for the example.
-	if len(args) != 3 {
-		panic("oops")
-	}
-	a1, a2, a3 := args[0], args[1], args[2]
-	return syscall_syscall(s.Addr, a1, a2, a3)
-}
-
 // MustOpen is like Open but panics if operation failes.
 //
 func MustOpen(path string, mode int) *Dylib {
