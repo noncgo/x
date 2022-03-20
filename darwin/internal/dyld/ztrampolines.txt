@@ -1,0 +1,7 @@
+/usr/lib/libSystem.B.dylib:
+- dladdr
+- dlclose
+- dlerror
+- dlopen
+- dlopen_preflight
+- dlsym

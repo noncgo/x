@@ -1,22 +1,33 @@
+//go:build darwin
+// +build darwin
+
+// Package dyld provides a bindings for dynamic linker APIs.
 package dyld
 
 import (
 	"errors"
 	"runtime"
+	"syscall"
+
+	"github.com/noncgo/x/darwin/internal/cstr"
 )
 
-var (
-	ErrNotFound = errors.New("not found")
-)
+// ErrNotFound is an error returned from Addr function when there is no image
+// for the given address.
+var ErrNotFound = errors.New("no image found for the given address")
 
 const (
+	// BindLazy specifies the binding mode for loading an image.
+	//
 	// Each external function reference is bound the first time
 	// the function is called.
 	//
 	// This is the default behavior.
 	//
-	BindLazy = _RTLD_LAZY
+	BindLazy = rtldLazy
 
+	// BindLazy specifies the binding mode for loading an image.
+	//
 	// All external function references are bound immediately
 	// during the call to Open.
 	//
@@ -24,58 +35,68 @@ const (
 	// However, BindNow is useful to ensure that any undefined
 	// symbols are discovered.
 	//
-	BindNow = _RTLD_NOW
+	BindNow = rtldNow
 
 	// One of the following may be ORed into the mode argument:
 
+	// ScopeGlobal specifies the scope of a loaded image.
+	//
 	// Exported symbols will be available to any images built with
 	// -flat_namespace option to ld(1) or to calls to Lookup functions.
 	//
 	// This is the default behavior.
 	//
-	ScopeGlobal = _RTLD_GLOBAL
+	ScopeGlobal = rtldGlobal
 
-	// Exported symbols are generally hidden and only availble
-	// to Lookup when directly using the Dylib returned by Open.
+	// ScopeLocal specifies the scope of a loaded image.
 	//
-	ScopeLocal = _RTLD_LOCAL
+	// Exported symbols are generally hidden and only available
+	// to Lookup when directly using the Image returned by Open.
+	//
+	ScopeLocal = rtldLocal
 
-	// The image is not loaded. However, a valid Dylib is returned if
+	// NoLoad specifies the mode for loading an image.
+	//
+	// The image is not loaded. However, a valid Image is returned if
 	// the image already exists in the process. This provides a way to
 	// query if an image is already loaded.
 	//
 	// You eventually need a corresponding call to Close.
 	//
-	NoLoad = _RTLD_NOLOAD
+	NoLoad = rtldNoLoad
 
+	// NoDelete specifies the mode for loading an image.
+	//
 	// The image will never be removed from the address space,
 	// even after all clients have released it via Close.
 	//
-	NoDelete = _RTLD_NODELETE
+	NoDelete = rtldNoDelete
 
 	// Additionally, the following may be ORed into the mode argument:
 
+	// LookupFirst specifies the mode for lookups in a loaded image.
+	//
 	// Lookup calls will only search the image specified, and not
 	// subsequent images.
 	//
-	LookupFirst = _RTLD_FIRST
+	LookupFirst = rtldFirst
 )
 
 const (
-	_RTLD_LAZY     = 0x1
-	_RTLD_NOW      = 0x2
-	_RTLD_LOCAL    = 0x4
-	_RTLD_GLOBAL   = 0x8
-	_RTLD_NOLOAD   = 0x10
-	_RTLD_NODELETE = 0x80
-	_RTLD_FIRST    = 0x100
+	rtldLazy     = 0x1
+	rtldNow      = 0x2
+	rtldLocal    = 0x4
+	rtldGlobal   = 0x8
+	rtldNoLoad   = 0x10
+	rtldNoDelete = 0x80
+	rtldFirst    = 0x100
 )
 
 var (
-	_RTLD_NEXT      = &Dylib{"", ^Handle(0)}
-	_RTLD_DEFAULT   = &Dylib{"", ^Handle(1)}
-	_RTLD_SELF      = &Dylib{"", ^Handle(2)}
-	_RTLD_MAIN_ONLY = &Dylib{"", ^Handle(4)}
+	rtldNext     = &Image{"", ^Handle(0)}
+	rtldDefault  = &Image{"", ^Handle(1)}
+	rtldSelf     = &Image{"", ^Handle(2)}
+	rtldMainOnly = &Image{"", ^Handle(4)}
 )
 
 // Lookup searches symbol by name in all Mach-O images in the process
@@ -86,7 +107,7 @@ var (
 // See RTLD_DEFAULT.
 //
 func Lookup(name string) (*Symbol, error) {
-	return _RTLD_DEFAULT.Lookup(name)
+	return rtldDefault.Lookup(name)
 }
 
 // LookupNext searches symbol by name in Mach-O images that were loaded after
@@ -96,7 +117,7 @@ func Lookup(name string) (*Symbol, error) {
 // See RTLD_NEXT.
 //
 func LookupNext(name string) (*Symbol, error) {
-	return _RTLD_NEXT.Lookup(name)
+	return rtldNext.Lookup(name)
 }
 
 // LookupSelf is like LookupNext but also searches current Mach-O image.
@@ -105,7 +126,7 @@ func LookupNext(name string) (*Symbol, error) {
 // See RTLD_SELF.
 //
 func LookupSelf(name string) (*Symbol, error) {
-	return _RTLD_SELF.Lookup(name)
+	return rtldSelf.Lookup(name)
 }
 
 // LookupMain searches the Mach-O image of the main executable.
@@ -114,25 +135,28 @@ func LookupSelf(name string) (*Symbol, error) {
 // See RTLD_MAIN_ONLY.
 //
 func LookupMain(name string) (*Symbol, error) {
-	return _RTLD_MAIN_ONLY.Lookup(name)
+	return rtldMainOnly.Lookup(name)
 }
 
+// Handle is an opaque handle for the loaded image of a dynamic library.
 type Handle uintptr
 
-type Dylib struct {
+// Image represents an image of a loaded dynamic library.
+type Image struct {
 	Name   string
 	Handle Handle
 }
 
+// Symbol represents a symbol in a loaded dynamic library.
 type Symbol struct {
-	Dylib *Dylib
+	Image *Image
 	Name  string
 	Addr  uintptr
 }
 
-// MustOpen is like Open but panics if operation failes.
+// MustOpen is like Open but panics if operation fails.
 //
-func MustOpen(path string, mode int) *Dylib {
+func MustOpen(path string, mode int) *Image {
 	l, e := Open(path, mode)
 	if e != nil {
 		panic(e)
@@ -178,7 +202,7 @@ func MustOpen(path string, mode int) *Dylib {
 //
 // See dlopen(3).
 //
-func Open(path string, mode int) (*Dylib, error) {
+func Open(path string, mode int) (*Image, error) {
 	p, err := cstring(path)
 	if err != nil {
 		return nil, err
@@ -192,8 +216,7 @@ func Open(path string, mode int) (*Dylib, error) {
 		return nil, lastError()
 	}
 	h := Handle(handle)
-	d := &Dylib{path, h}
-	runtime.SetFinalizer(d, (*Dylib).Close)
+	d := &Image{path, h}
 	return d, nil
 }
 
@@ -233,7 +256,7 @@ func IsLoadable(path string) (bool, error) {
 //
 // See dlsym(3).
 //
-func (d *Dylib) Lookup(name string) (*Symbol, error) {
+func (d *Image) Lookup(name string) (*Symbol, error) {
 	p, err := cstring(name)
 	if err != nil {
 		return nil, err
@@ -266,7 +289,7 @@ func (d *Dylib) Lookup(name string) (*Symbol, error) {
 //
 // See dlclose(3).
 //
-func (d *Dylib) Close() (err error) {
+func (d *Image) Close() (err error) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 
@@ -280,6 +303,7 @@ func (d *Dylib) Close() (err error) {
 	return err
 }
 
+// AddrInfo describes an address in process address space.
 type AddrInfo struct {
 	Fname string  // Pathname of shared object
 	Fbase uintptr // Base address of shared object
@@ -295,12 +319,12 @@ type AddrInfo struct {
 //
 // See dladdr(3).
 //
-func Addr(addr uintptr) (info *AddrInfo, err error) {
+func Addr(p uintptr) (info *AddrInfo, err error) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 
-	var dli _dl_info
-	ret := dladdr(addr, &dli)
+	var dli dyldInfo
+	ret := dladdr(p, &dli)
 	if ret != 0 {
 		fname := gostring(dli.fname)
 		sname := gostring(dli.sname)
@@ -332,4 +356,16 @@ func lastError() error {
 		return err
 	}
 	return nil
+}
+
+func cstring(s string) (*byte, error) {
+	p, ok := cstr.CString(s)
+	if !ok {
+		return nil, syscall.EINVAL
+	}
+	return p, nil
+}
+
+func gostring(p uintptr) string {
+	return cstr.GoString(p)
 }

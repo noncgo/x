@@ -1,0 +1,17 @@
+- External linker without Cgo: currently we can’t do this, cgo_ldflag is limited
+  to std packages. See also https://github.com/golang/go/issues/42459
+
+- CFRunLoopPerformBlock: we’d need support for Objective-C blocks ABI.
+  - https://github.com/mikeash/MABlockClosure
+  - https://albertodebortoli.com/2013/04/21/objective-c-blocks-under-the-hood/
+  - https://www.informit.com/articles/article.aspx?p=1749597&seqNum=12
+  - https://clang.llvm.org/docs/Block-ABI-Apple.html#high-level
+  - https://developer.apple.com/documentation/corefoundation/1542985-cfrunloopperformblock?language=objc
+
+- Mac Catalyst: looks like Apple introduced a new target for Mac Catalyst and we
+  can’t simply link against UIKit using cgo_import_dynamic.
+  - https://developer.apple.com/forums/thread/122571
+  - https://github.com/golang/go/issues/43371
+  - https://github.com/golang/go/issues/47228#issuecomment-880999450
+  - https://github.com/golang/go/issues/36856
+  - `/System/iOSSupport/System/Library/Frameworks/UIKit.framework/Versions/A/UIKit`

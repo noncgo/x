@@ -1,0 +1,34 @@
+run:
+  timeout: 5m
+
+linters-settings:
+  gofumpt:
+    extra-rules: true
+  goimports:
+    local-prefixes: github.com/noncgo
+  revive:
+    rules:
+      # We use blank imports for assume-no-moving-gc.
+      - name: blank-imports
+        disabled: true
+
+
+linters:
+  enable:
+    - gofumpt
+    - goimports
+    - depguard
+    - gocritic
+    - misspell
+    - revive
+    - unparam
+  disable:
+    # False positives for embedded structs.
+    # See https://github.com/golangci/golangci-lint/issues/1841
+    # and https://gitlab.com/opennota/check/-/issues/11
+    - structcheck
+    - deadcode
+    - varcheck
+
+issues:
+  exclude-use-default: false

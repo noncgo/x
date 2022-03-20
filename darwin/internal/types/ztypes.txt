@@ -1,0 +1,36 @@
+# Objective-C
+AnyObject:
+
+# Core Foundation
+#
+# Some of the types are toll-free bridged with their Objective-C counterparts.
+# Note that not all types are bridged. We enforce this constraint via Go type
+# system by embedding AnyObject in toll-free bridged types.
+#
+# References
+#  • https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFDesignConcepts/Articles/tollFreeBridgedTypes.html
+CFType:
+CFAllocator:
+- CFType
+CFArray:
+- AnyObject
+- CFType
+CFData:
+- AnyObject
+- CFType
+CFDictionary:
+- AnyObject
+- CFType
+CFMutableArray:
+- AnyObject
+- CFArray
+CFRunLoop:
+- CFType
+CFString:
+- AnyObject
+- CFType
+
+# Core Services / File System Events
+ConstFSEventStreamRef:
+FSEventStreamRef:
+- ConstFSEventStreamRef

@@ -1,0 +1,10 @@
+/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices:
+- FSEventStreamCreate
+- FSEventStreamInvalidate
+- FSEventStreamRelease
+- FSEventStreamRetain
+- FSEventStreamScheduleWithRunLoop
+- FSEventStreamShow
+- FSEventStreamStart
+- FSEventStreamStop
+- FSEventStreamUnscheduleFromRunLoop

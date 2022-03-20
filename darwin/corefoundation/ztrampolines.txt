@@ -1,0 +1,23 @@
+/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation:
+- CFArrayAppendValue
+- CFArrayCreateMutable
+- CFCopyDescription
+- CFCopyTypeIDDescription
+- CFDataGetBytePtr
+- CFDataGetLength
+- CFEqual
+- CFGetAllocator
+- CFGetRetainCount
+- CFGetTypeID
+- CFHash
+- CFRelease
+- CFRetain
+- CFRunLoopGetCurrent
+- CFRunLoopGetMain
+- CFRunLoopRun
+- CFRunLoopRunInMode
+- CFRunLoopStop
+- CFShow
+- CFStringCreateArrayBySeparatingStrings
+- CFStringCreateExternalRepresentation
+- CFStringCreateWithBytes

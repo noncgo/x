@@ -1,0 +1,11 @@
+/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation:
+- kCFAllocatorDefault
+- kCFAllocatorMalloc
+- kCFAllocatorMallocZone
+- kCFAllocatorNull
+- kCFAllocatorSystemDefault
+- kCFAllocatorUseContext
+- kCFRunLoopCommonModes
+- kCFRunLoopDefaultMode
+- kCFTypeArrayCallBacks
+- __CFConstantStringClassReference
